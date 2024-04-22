@@ -1,16 +1,14 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
 @st.cache
 def load_data():
     data_path = 'Data/data.csv'
     data = pd.read_csv(data_path)
-    # Get unique regions before modifying the DataFrame
     unique_regions = data['Region'].unique()
-    # Create dummy variables for region
     data = pd.get_dummies(data, columns=['Region'], drop_first=True)
     return data, unique_regions
 
@@ -30,10 +28,10 @@ def run():
     X_train_r, X_test_r, y_train_r, y_test_r = train_test_split(X, y_retail, test_size=0.2, random_state=42)
     X_train_f, X_test_f, y_train_f, y_test_f = train_test_split(X, y_food_service, test_size=0.2, random_state=42)
 
-    # Linear Regression Models for each sector
-    model_household = LinearRegression()
-    model_retail = LinearRegression()
-    model_food_service = LinearRegression()
+    # Random Forest Models for each sector
+    model_household = RandomForestRegressor(n_estimators=100, random_state=42)
+    model_retail = RandomForestRegressor(n_estimators=100, random_state=42)
+    model_food_service = RandomForestRegressor(n_estimators=100, random_state=42)
     
     model_household.fit(X_train_h, y_train_h)
     model_retail.fit(X_train_r, y_train_r)
@@ -51,7 +49,6 @@ def run():
     st.subheader("Predict Waste by Region")
     region = st.selectbox("Select Region", options=unique_regions)
     if st.button("Predict"):
-        # Create input vector for the selected region
         input_data = pd.get_dummies(pd.DataFrame({'Region': [region]}), columns=['Region']).reindex(columns=X.columns, fill_value=0)
         pred_h = model_household.predict(input_data)[0]
         pred_r = model_retail.predict(input_data)[0]
